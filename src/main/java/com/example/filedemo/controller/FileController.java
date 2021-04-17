@@ -1,6 +1,8 @@
 package com.example.filedemo.controller;
 
+import com.example.filedemo.solver.Puzzler;
 import com.example.filedemo.payload.UploadFileResponse;
+import com.example.filedemo.payload.PuzzleResult;
 import com.example.filedemo.service.FileStorageService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,21 +20,37 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.concurrent.atomic.AtomicLong;
 
 @RestController
 public class FileController {
 
     private static final Logger logger = LoggerFactory.getLogger(FileController.class);
+    private static final String template = "Hello, %s!";
+
+    private final AtomicLong counter = new AtomicLong();
 
     @Autowired
     private FileStorageService fileStorageService;
+
+    @GetMapping("/solution/{fileName:.+}")
+    public PuzzleResult solution(@PathVariable String fileName, HttpServletRequest request) {
+        String fileDownloadUri = ServletUriComponentsBuilder.fromCurrentContextPath()
+                .path("/downloadFile/")
+                .path(fileName)
+                .toUriString();
+
+        String puzzleAnswer = Puzzler.solve(fileDownloadUri, fileName);
+
+        return new PuzzleResult(fileName, fileDownloadUri, puzzleAnswer);
+    }
 
     @PostMapping("/uploadFile")
     public UploadFileResponse uploadFile(@RequestParam("file") MultipartFile file) {
         String fileName = fileStorageService.storeFile(file);
 
         String fileDownloadUri = ServletUriComponentsBuilder.fromCurrentContextPath()
-                .path("/downloadFile/")
+                .path("/solution/")
                 .path(fileName)
                 .toUriString();
 
@@ -71,5 +89,4 @@ public class FileController {
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + resource.getFilename() + "\"")
                 .body(resource);
     }
-
 }
