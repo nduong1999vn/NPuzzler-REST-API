@@ -1,11 +1,12 @@
 package com.example.filedemo.solver;
 import java.io.*;
+import java.net.*;
 
 /**
  * nPuzzler --- main class/initiate search methods/read problem file/etc.
  * @author    COS30019
  */
-class nPuzzler
+public class Puzzler
 {
 	
 	//the number of methods programmed into nPuzzler
@@ -13,7 +14,11 @@ class nPuzzler
 	public static nPuzzle gPuzzle;
 	public static SearchMethod[] lMethods;
 	
-	public static void main(String[] args)
+	public Puzzler() {
+
+	}
+
+	public static String solve(String fileDownloadUri, String fileName)
 	{
 		//Create method objects
 		InitMethods();
@@ -22,15 +27,15 @@ class nPuzzler
 		//  [0] - filename containing puzzle(s)
 		//  [1] - method name
 		
-		if(args.length < 2) {
+		/*if(args.length < 2) {
 			System.out.println("Usage: nPuzzler <filename> <search-method>.");
 			System.exit(1);			
-		}
+		}*/
 		
 		//Get the puzzle from the file
-		gPuzzle = readProblemFile(args[0]);
+		gPuzzle = readProblemFile(fileDownloadUri);
 		
-		String method = args[1];
+		String method = "BFS";
 		SearchMethod thisMethod = null;
 		
 		//determine which method the user wants to use to solve the puzzles
@@ -56,24 +61,25 @@ class nPuzzler
 		direction[] thisSolution = thisMethod.Solve(gPuzzle);
 		
 		//Print information about this solution
-		System.out.println(args[0] + "   " + method + "   " + thisMethod.Searched.size());
+		String result = "";
 		if(thisSolution == null)
 		{
 			//No solution found :(
-			System.out.println("No solution found.");
+			result = "No solution found.";
 		}
 		else
 		{
 			//We found a solution, print all the steps to success!
 			for(int j = 0; j < thisSolution.length; j++)
 			{
-				System.out.print(thisSolution[j].toString() + ";");
+				result += thisSolution[j].toString() + ";";
 			}
-			System.out.println();
+			//System.out.println();
 		}
 		//Reset the search method for next use.
 		thisMethod.reset();
-		System.exit(0);
+
+		return result;
 	}
 	
 	private static void InitMethods()
@@ -86,14 +92,15 @@ class nPuzzler
 		lMethods[4] = new HillClimbing();
 	}
 	
-	private static nPuzzle readProblemFile(String fileName) // this allow only one puzzle to be specified in a problem file 
+	private static nPuzzle readProblemFile(String fileDownloadUri) // this allow only one puzzle to be specified in a problem file 
 	{
 		
 		try
 		{
 			//create file reading objects
-			FileReader reader = new FileReader(fileName);
-			BufferedReader puzzle = new BufferedReader(reader);
+			URL url = new URL(fileDownloadUri);
+			BufferedReader puzzle = new BufferedReader(new InputStreamReader(url.openStream()));
+			
 			nPuzzle result;
 			
 			String puzzleDimension = puzzle.readLine();
@@ -125,14 +132,14 @@ class nPuzzler
 		catch(FileNotFoundException ex)
 		{
 			//The file didn't exist, show an error
-			System.out.println("Error: File \"" + fileName + "\" not found.");
+			//System.out.println("Error: File \"" + fileName + "\" not found.");
 			System.out.println("Please check the path to the file.");
 			System.exit(1);
 		}
 		catch(IOException ex)
 		{
 			//There was an IO error, show and error message
-			System.out.println("Error in reading \"" + fileName + "\". Try closing it and programs that may be accessing it.");
+			//System.out.println("Error in reading \"" + fileName + "\". Try closing it and programs that may be accessing it.");
 			System.out.println("If you're accessing this file over a network, try making a local copy.");
 			System.exit(1);
 		}
